@@ -26,12 +26,11 @@ dependencies {
 	implementation("org.apache.kafka:kafka-streams")
 	runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-	testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.kafka:spring-kafka-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
 	testImplementation(libs.mockito)
+	testImplementation(libs.mockito.kotlin)
 	mockitoAgent(libs.mockito) { isTransitive = false }
 }
 
@@ -42,7 +41,7 @@ kotlin {
 }
 
 tasks.test {
-	jvmArgs("-javaagent:${mockitoAgent.asPath}")
+	jvmArgs("-Xshare:off", "-javaagent:${mockitoAgent.asPath}")
 	useJUnitPlatform()
 	systemProperty("spring.profiles.active", "test")
 }
