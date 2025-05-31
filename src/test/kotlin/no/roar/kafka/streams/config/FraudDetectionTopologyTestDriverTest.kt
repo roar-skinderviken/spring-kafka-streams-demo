@@ -67,7 +67,7 @@ class FraudDetectionTopologyTestDriverTest {
 
     @Test
     fun `given two transactions this hour and one transaction earlier same day expect no fraud alert to be published`() {
-        sendTestTransactionsUsingTestOutputTopic(listOf(-3698L, -30L, -29L, 10L))
+        sendTestTransactionsUsingTestInputTopic(listOf(-3698L, -30L, -29L, 10L))
 
         waitAtMost(Duration.ofSeconds(10))
             .pollDelay(Duration.ofSeconds(5))
@@ -79,7 +79,7 @@ class FraudDetectionTopologyTestDriverTest {
 
     @Test
     fun `given two groups of transactions withing same hours expect 2 fraud alerts to be published`() {
-        sendTestTransactionsUsingTestOutputTopic(timeOffsetsForTwoHours)
+        sendTestTransactionsUsingTestInputTopic(timeOffsetsForTwoHours)
 
         waitAtMost(Duration.ofSeconds(10))
             .until { !outputTopic.isEmpty }
@@ -87,7 +87,7 @@ class FraudDetectionTopologyTestDriverTest {
         assertThat(outputTopic.readValuesToList()).isEqualTo(expectedFraudAlertList)
     }
 
-    private fun sendTestTransactionsUsingTestOutputTopic(timeOffsets: List<Long>) {
+    private fun sendTestTransactionsUsingTestInputTopic(timeOffsets: List<Long>) {
         sendTestTransactions(timeOffsets) { transaction ->
             inputTopic.pipeInput(
                 transaction.accountId,
