@@ -15,8 +15,6 @@ object TestUtils {
     private const val TRANSACTION_AMOUNT_IN_TEST = 3020
 
     private val now: Instant = Instant.now().truncatedTo(ChronoUnit.HOURS)
-    private fun transactionInTest(timestamp: Long) =
-        Transaction(ACCOUNT_ID_IN_TEST, TRANSACTION_AMOUNT_IN_TEST, timestamp)
 
     val expectedFraudAlert = FraudAlert(ACCOUNT_ID_IN_TEST, TRANSACTION_AMOUNT_IN_TEST * 3)
     val expectedFraudAlertList = listOf(expectedFraudAlert, expectedFraudAlert)
@@ -25,7 +23,13 @@ object TestUtils {
         timeOffsets: List<Long>,
         sendTransactionFunc: (Transaction) -> Unit
     ) = timeOffsets
-        .map { timeOffset -> transactionInTest(now.plusSeconds(timeOffset).toEpochMilli()) }
+        .map { timeOffset ->
+            Transaction(
+                ACCOUNT_ID_IN_TEST,
+                TRANSACTION_AMOUNT_IN_TEST,
+                now.plusSeconds(timeOffset).toEpochMilli()
+            )
+        }
         .forEach(sendTransactionFunc)
 
     fun sendTestTransactionsUsingKafkaTemplate(
