@@ -29,6 +29,5 @@ fraud-alert-topic:
 
 logging:
   level:
-    root: error
-    no.roar.kafka.retry: info
+    root: info
     no.roar.kafka.streams: info

@@ -26,6 +26,12 @@ dependencies {
 	implementation("org.apache.kafka:kafka-streams")
 	runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
 
+	// logging
+	implementation(libs.slf4j.api)
+	implementation(libs.jul.to.slf4j)
+	implementation(libs.logstash.logback.encoder)
+	runtimeOnly(libs.logback.classic)
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.kafka:spring-kafka-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")

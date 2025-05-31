@@ -12,3 +12,6 @@ logging:
     root: error
     org.apache.kafka.streams: error
     roar.kafka.streams.config: info
+  structured:
+    format:
+      console: ecs
