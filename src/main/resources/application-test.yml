@@ -1,0 +1,14 @@
+spring:
+  kafka:
+    streams:
+      state-dir: ${java.io.tmpdir}/kafka-streams-test-${random.value}
+      cleanup:
+        on-shutdown: true
+      properties:
+        commit.interval.ms: 1_000 # default is 30_000 ms which is causing long-running tests
+
+logging:
+  level:
+    root: error
+    org.apache.kafka.streams: error
+    roar.kafka.streams.config: info

@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: kafka-streams-demo
+  main:
+    banner-mode: off
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.type.mapping: "fraudAlert:no.roar.kafka.streams.model.FraudAlert,transaction:no.roar.kafka.streams.model.Transaction"
+
+    streams:
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        spring.json.trusted.packages: "*"
+
+transaction-topic:
+  name: transaction
+fraud-alert-topic:
+  name: fraud-alert
+
+logging:
+  level:
+    root: error
+    no.roar.kafka.retry: info
+    no.roar.kafka.streams: info
