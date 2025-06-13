@@ -1,53 +1,60 @@
 plugins {
-	kotlin("jvm") version "2.1.21"
-	kotlin("plugin.spring") version "2.1.21"
-	id("org.springframework.boot") version "3.5.0"
-	id("io.spring.dependency-management") version "1.1.7"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.spring)
+    alias(libs.plugins.springframework.boot)
+    alias(libs.plugins.dependency.management)
 }
 
 group = "no.roar"
 version = "0.0.1-SNAPSHOT"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
-val mockitoAgent = configurations.create("mockitoAgent")
-
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter")
-	implementation("org.springframework.kafka:spring-kafka")
-	implementation("org.apache.kafka:kafka-streams")
-	runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.apache.kafka:kafka-streams")
+    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-	// logging
-	implementation(libs.slf4j.api)
-	implementation(libs.jul.to.slf4j)
-	implementation(libs.logstash.logback.encoder)
-	runtimeOnly(libs.logback.classic)
+    // logging
+    implementation(libs.slf4j.api)
+    implementation(libs.jul.to.slf4j)
+    implementation(libs.logstash.logback.encoder)
+    runtimeOnly(libs.logback.classic)
 
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.kafka:spring-kafka-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	testImplementation(libs.mockito)
-	testImplementation(libs.mockito.kotlin)
-	mockitoAgent(libs.mockito) { isTransitive = false }
+    // test
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.extensions.spring)
+    testImplementation(libs.mockk)
+    testImplementation(libs.springmockk)
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(module = "mockito-core")
+    }
+    testImplementation("org.springframework.kafka:spring-kafka-test")
 }
 
 kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
-	}
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
 }
 
 tasks.test {
-	jvmArgs("-Xshare:off", "-javaagent:${mockitoAgent.asPath}")
-	useJUnitPlatform()
-	systemProperty("spring.profiles.active", "test")
+    useJUnitPlatform()
+    jvmArgs(
+        "-Xshare:off",
+        "-XX:+EnableDynamicAgentLoading",
+        "-Dkotest.framework.classpath.scanning.autoscan.disable=true",
+        "-Dkotest.framework.config.fqn=no.roar.kafka.streams.KotestConfig"
+    )
 }

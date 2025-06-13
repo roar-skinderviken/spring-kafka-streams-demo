@@ -2,6 +2,7 @@ package no.roar.kafka.streams.config
 
 import no.roar.kafka.streams.model.FraudAlert
 import no.roar.kafka.streams.model.Transaction
+import org.apache.kafka.streams.TestInputTopic
 import org.springframework.kafka.core.KafkaTemplate
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -16,10 +17,10 @@ object TestUtils {
 
     private val now: Instant = Instant.now().truncatedTo(ChronoUnit.HOURS)
 
-    val expectedFraudAlert = FraudAlert(ACCOUNT_ID_IN_TEST, TRANSACTION_AMOUNT_IN_TEST * 3)
+    private val expectedFraudAlert = FraudAlert(ACCOUNT_ID_IN_TEST, TRANSACTION_AMOUNT_IN_TEST * 3)
     val expectedFraudAlertList = listOf(expectedFraudAlert, expectedFraudAlert)
 
-    fun sendTestTransactions(
+    private fun sendTestTransactions(
         timeOffsets: List<Long>,
         sendTransactionFunc: (Transaction) -> Unit
     ) = timeOffsets
@@ -31,6 +32,17 @@ object TestUtils {
             )
         }
         .forEach(sendTransactionFunc)
+
+    fun sendTestTransactionsUsingTestInputTopic(
+        inputTopic: TestInputTopic<String, Transaction>,
+        timeOffsets: List<Long>
+    ) = sendTestTransactions(timeOffsets) { transaction ->
+        inputTopic.pipeInput(
+            transaction.accountId,
+            transaction,
+            transaction.timestamp
+        )
+    }
 
     fun sendTestTransactionsUsingKafkaTemplate(
         kafkaTemplate: KafkaTemplate<String, Transaction>,

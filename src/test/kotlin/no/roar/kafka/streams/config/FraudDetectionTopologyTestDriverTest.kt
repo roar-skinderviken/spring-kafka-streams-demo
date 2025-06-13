@@ -1,7 +1,13 @@
 package no.roar.kafka.streams.config
 
+import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.assertions.nondeterministic.eventuallyConfig
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import no.roar.kafka.streams.config.TestUtils.expectedFraudAlertList
-import no.roar.kafka.streams.config.TestUtils.sendTestTransactions
+import no.roar.kafka.streams.config.TestUtils.sendTestTransactionsUsingTestInputTopic
 import no.roar.kafka.streams.config.TestUtils.timeOffsetsForTwoHours
 import no.roar.kafka.streams.model.FraudAlert
 import no.roar.kafka.streams.model.Transaction
@@ -9,91 +15,75 @@ import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.TestInputTopic
 import org.apache.kafka.streams.TestOutputTopic
 import org.apache.kafka.streams.TopologyTestDriver
-import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.Awaitility.waitAtMost
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.kafka.config.StreamsBuilderFactoryBean
 import org.springframework.kafka.support.serializer.JsonSerde
 import org.springframework.test.context.ActiveProfiles
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @SpringBootTest
 @ActiveProfiles("test", "topology-test")
-class FraudDetectionTopologyTestDriverTest {
+class FraudDetectionTopologyTestDriverTest(
+    @Value("\${transaction-topic.name}") inputTopicName: String,
+    @Value("\${fraud-alert-topic.name}") outputTopicName: String,
+    streamsBuilder: StreamsBuilderFactoryBean
+) : BehaviorSpec({
 
-    @Value("\${transaction-topic.name}")
-    lateinit var inputTopicName: String
+    Given("a setup with test input- and output topics") {
+        lateinit var testDriver: TopologyTestDriver
+        lateinit var inputTopic: TestInputTopic<String, Transaction>
+        lateinit var outputTopic: TestOutputTopic<String, FraudAlert>
 
-    @Value("\${fraud-alert-topic.name}")
-    lateinit var outputTopicName: String
+        beforeContainer {
+            testDriver = TopologyTestDriver(
+                streamsBuilder.topology,
+                streamsBuilder.streamsConfiguration
+            )
 
-    @Autowired
-    lateinit var streamsBuilder: StreamsBuilderFactoryBean
+            inputTopic = testDriver.createInputTopic(
+                inputTopicName,
+                Serdes.String().serializer(),
+                JsonSerde(Transaction::class.java).serializer()
+            )
 
-    lateinit var testDriver: TopologyTestDriver
-    lateinit var inputTopic: TestInputTopic<String, Transaction>
-    lateinit var outputTopic: TestOutputTopic<String, FraudAlert>
-
-    @BeforeEach
-    fun setup() {
-        this.testDriver = TopologyTestDriver(
-            streamsBuilder.topology,
-            streamsBuilder.streamsConfiguration
-        )
-
-        this.inputTopic = testDriver.createInputTopic(
-            inputTopicName,
-            Serdes.String().serializer(),
-            JsonSerde(Transaction::class.java).serializer()
-        )
-
-        this.outputTopic = testDriver.createOutputTopic(
-            outputTopicName,
-            Serdes.String().deserializer(),
-            JsonSerde(FraudAlert::class.java).deserializer()
-        )
-    }
-
-    @AfterEach
-    fun tearDown() {
-        testDriver.close()
-    }
-
-    @Test
-    fun `given two transactions this hour and one transaction earlier same day expect no fraud alert to be published`() {
-        sendTestTransactionsUsingTestInputTopic(listOf(-3698L, -30L, -29L, 10L))
-
-        waitAtMost(Duration.ofSeconds(10))
-            .pollDelay(Duration.ofSeconds(5))
-            .pollInterval(Duration.ofSeconds(1))
-            .untilAsserted { assertTrue(outputTopic.isEmpty) }
-
-        assertTrue(outputTopic.isEmpty)
-    }
-
-    @Test
-    fun `given two groups of transactions withing same hours expect 2 fraud alerts to be published`() {
-        sendTestTransactionsUsingTestInputTopic(timeOffsetsForTwoHours)
-
-        waitAtMost(Duration.ofSeconds(10))
-            .until { !outputTopic.isEmpty }
-
-        assertThat(outputTopic.readValuesToList()).isEqualTo(expectedFraudAlertList)
-    }
-
-    private fun sendTestTransactionsUsingTestInputTopic(timeOffsets: List<Long>) {
-        sendTestTransactions(timeOffsets) { transaction ->
-            inputTopic.pipeInput(
-                transaction.accountId,
-                transaction,
-                transaction.timestamp
+            outputTopic = testDriver.createOutputTopic(
+                outputTopicName,
+                Serdes.String().deserializer(),
+                JsonSerde(FraudAlert::class.java).deserializer()
             )
         }
+
+        afterContainer {
+            testDriver.close()
+        }
+
+        When("sending two transactions this hour and one transaction earlier same day") {
+            sendTestTransactionsUsingTestInputTopic(inputTopic, listOf(-3698L, -30L, -29L, 10L))
+
+            Then("expect no fraud alert to be published") {
+                val config = eventuallyConfig {
+                    duration = 10.seconds
+                    initialDelay = 5.seconds
+                    interval = 500.milliseconds
+                }
+
+                eventually(config) {
+                    outputTopic.isEmpty.shouldBeTrue()
+                }
+            }
+        }
+
+        When("sending two groups of transactions withing same hours") {
+            sendTestTransactionsUsingTestInputTopic(inputTopic, timeOffsetsForTwoHours)
+
+            Then("expect 2 fraud alerts to be received") {
+                eventually(10.seconds) {
+                    outputTopic.isEmpty.shouldBeFalse()
+                    outputTopic.readValuesToList() shouldBe expectedFraudAlertList
+                }
+            }
+        }
     }
-}
+})
