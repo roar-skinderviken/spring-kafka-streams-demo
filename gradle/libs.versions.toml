@@ -1,6 +1,6 @@
 [versions]
 # plugins
-spring-boot-version = "3.5.3"
+spring-boot-version = "3.5.5"
 dependency-management-version = "1.1.7"
 kotlin-version = "2.2.0"
 
