@@ -13,7 +13,7 @@ springmockk-version = "4.0.2"
 # Logging
 slf4j-version = "2.0.17"
 logstash-logback-encoder-version = "8.1"
-logback-classic-version = "1.5.18"
+logback-classic-version = "1.5.19"
 
 [libraries]
 # test
