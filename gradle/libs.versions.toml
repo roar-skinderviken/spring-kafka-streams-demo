@@ -2,7 +2,7 @@
 # plugins
 spring-boot-version = "3.5.3"
 dependency-management-version = "1.1.7"
-kotlin-version = "2.2.0"
+kotlin-version = "2.2.21"
 
 # test
 mockk-version = "1.14.5"
