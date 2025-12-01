@@ -8,6 +8,7 @@ kotlin-version = "2.2.21"
 mockk-version = "1.14.6"
 kotest-version = "6.0.6"
 springmockk-version = "5.0.1"
+jackson-module-kotlin-version = "3.0.2"
 
 # Logging
 slf4j-version = "2.0.17"
@@ -15,6 +16,8 @@ logstash-logback-encoder-version = "9.0"
 logback-classic-version = "1.5.21"
 
 [libraries]
+jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson-module-kotlin-version" }
+
 # test
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotest-version" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest-version" }

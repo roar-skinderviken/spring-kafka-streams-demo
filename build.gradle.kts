@@ -22,8 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-kafka")
     implementation("org.apache.kafka:kafka-streams")
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-    runtimeOnly("tools.jackson.module:jackson-module-kotlin:3.0.2") // TODO
+    runtimeOnly(libs.jackson.module.kotlin)
 
     // logging
     implementation(libs.slf4j.api)
@@ -50,12 +49,10 @@ kotlin {
     }
 }
 
-tasks.test {
+tasks.named<Test>("test") {
     useJUnitPlatform()
     jvmArgs(
         "-Xshare:off",
         "-XX:+EnableDynamicAgentLoading",
-        "-Dkotest.framework.classpath.scanning.autoscan.disable=true",
-        "-Dkotest.framework.config.fqn=no.roar.kafka.streams.KotestConfig"
     )
 }

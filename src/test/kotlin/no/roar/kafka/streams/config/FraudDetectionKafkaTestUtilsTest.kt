@@ -18,6 +18,7 @@ import org.springframework.kafka.support.serializer.JacksonJsonDeserializer
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
 import org.springframework.kafka.test.utils.KafkaTestUtils
+import java.time.Duration
 
 @SpringBootTest
 @EmbeddedKafka(topics = ["transaction", "fraud-alert"])
@@ -26,19 +27,22 @@ class FraudDetectionKafkaTestUtilsTest(
     transactionKafkaTemplate: KafkaTemplate<String, Transaction>
 ) : BehaviorSpec({
 
-    // TODO: Fix me
-    xGiven("a configured Kafka fraud alert consumer") {
+    Given("a configured Kafka fraud alert consumer") {
         val fraudAlertConsumer = createFraudAlertConsumer(embeddedKafka)
 
         When("transactions exceeding the threshold are sent to Kafka") {
             sendTestTransactionsUsingKafkaTemplate(transactionKafkaTemplate, timeOffsetsForTwoHours)
 
             Then("the fraud alert consumer receives the expected fraud alerts") {
-                val fraudAlertRecords = KafkaTestUtils.getRecords(fraudAlertConsumer)
+                val receivedFraudAlerts =
+                    waitForFraudAlerts(
+                        consumer = fraudAlertConsumer,
+                        expectedCount = expectedFraudAlertList.size,
+                        timeoutSeconds = 10
+                    )
 
-                fraudAlertRecords.shouldNotBeEmpty()
+                receivedFraudAlerts.shouldNotBeEmpty()
 
-                val receivedFraudAlerts = fraudAlertRecords.map { it.value() }
                 receivedFraudAlerts shouldBe expectedFraudAlertList
             }
         }
@@ -57,5 +61,22 @@ class FraudDetectionKafkaTestUtilsTest(
                     this[JacksonJsonDeserializer.VALUE_DEFAULT_TYPE] = FraudAlert::class.java.name
                 }
             ).createConsumer().apply { subscribe(listOf("fraud-alert")) }
+
+        fun waitForFraudAlerts(
+            consumer: Consumer<String, FraudAlert>,
+            expectedCount: Int,
+            timeoutSeconds: Long = 10
+        ): List<FraudAlert> {
+
+            val deadline = System.currentTimeMillis() + timeoutSeconds * 1_000
+            val results = mutableListOf<FraudAlert>()
+
+            while (System.currentTimeMillis() < deadline && results.size < expectedCount) {
+                val polled = consumer.poll(Duration.ofMillis(500))
+                polled.forEach { results.add(it.value()) }
+            }
+
+            return results
+        }
     }
 }
