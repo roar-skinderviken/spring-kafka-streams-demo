@@ -41,12 +41,4 @@ class FraudDetectionIntegrationTest(
             }
         }
     }
-}) {
-/*
-    @TestConfiguration
-    class TestConfig {
-        @Bean
-        @Primary
-        fun mockFraudAlertService(): FraudAlertService = mockk()
-    }*/
-}
+})

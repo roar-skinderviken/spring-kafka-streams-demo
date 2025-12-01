@@ -10,13 +10,13 @@ import org.apache.kafka.streams.kstream.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.kafka.support.serializer.JsonSerde
+import org.springframework.kafka.support.serializer.JacksonJsonSerde
 import java.time.Duration
 
 @Configuration(proxyBeanMethods = false)
 class FraudDetectionTopologyConfig(
-    @Value("\${transaction-topic.name}") private val transactionTopic: String,
-    @Value("\${fraud-alert-topic.name}") private val fraudAlertTopic: String
+    @param:Value($$"${transaction-topic.name}") private val transactionTopic: String,
+    @param:Value($$"${fraud-alert-topic.name}") private val fraudAlertTopic: String
 ) {
     @Bean
     fun defaultTopology(builder: StreamsBuilder): KStream<String, Transaction> {
@@ -28,7 +28,7 @@ class FraudDetectionTopologyConfig(
         stream
             .groupBy(
                 { _, transaction -> transaction.accountId },
-                Grouped.with(Serdes.String(), JsonSerde(Transaction::class.java))
+                Grouped.with(Serdes.String(), JacksonJsonSerde(Transaction::class.java))
             )
             .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofHours(1)))
             .aggregate(
@@ -39,7 +39,7 @@ class FraudDetectionTopologyConfig(
                         metrics.totalAmount + transaction.amount
                     )
                 },
-                Materialized.with(Serdes.String(), JsonSerde(FraudMetrics::class.java))
+                Materialized.with(Serdes.String(), JacksonJsonSerde(FraudMetrics::class.java))
             )
             .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
             .toStream()
@@ -54,7 +54,7 @@ class FraudDetectionTopologyConfig(
                 )
             }.to(
                 fraudAlertTopic,
-                Produced.with(Serdes.String(), JsonSerde(FraudAlert::class.java))
+                Produced.with(Serdes.String(), JacksonJsonSerde(FraudAlert::class.java))
             )
 
         return stream

@@ -1,7 +1,6 @@
 package no.roar.kafka.streams
 
 import io.kotest.core.config.AbstractProjectConfig
-import io.kotest.extensions.spring.SpringAutowireConstructorExtension
 import io.kotest.extensions.spring.SpringExtension
 import org.springframework.core.env.AbstractEnvironment
 
@@ -10,8 +9,5 @@ object KotestConfig : AbstractProjectConfig() {
         System.setProperty(AbstractEnvironment.ACTIVE_PROFILES_PROPERTY_NAME, "test")
     }
 
-    override fun extensions() = listOf(
-        SpringExtension,
-        SpringAutowireConstructorExtension
-    )
+    override val extensions = listOf(SpringExtension())
 }

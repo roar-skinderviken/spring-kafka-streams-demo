@@ -20,9 +20,10 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-kafka")
     implementation("org.apache.kafka:kafka-streams")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    runtimeOnly("tools.jackson.module:jackson-module-kotlin:3.0.2") // TODO
 
     // logging
     implementation(libs.slf4j.api)

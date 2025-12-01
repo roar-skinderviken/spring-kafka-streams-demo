@@ -18,7 +18,7 @@ import org.apache.kafka.streams.TopologyTestDriver
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.kafka.config.StreamsBuilderFactoryBean
-import org.springframework.kafka.support.serializer.JsonSerde
+import org.springframework.kafka.support.serializer.JacksonJsonSerde
 import org.springframework.test.context.ActiveProfiles
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -26,8 +26,8 @@ import kotlin.time.Duration.Companion.seconds
 @SpringBootTest
 @ActiveProfiles("test", "topology-test")
 class FraudDetectionTopologyTestDriverTest(
-    @Value("\${transaction-topic.name}") inputTopicName: String,
-    @Value("\${fraud-alert-topic.name}") outputTopicName: String,
+    @Value($$"${transaction-topic.name}") inputTopicName: String,
+    @Value($$"${fraud-alert-topic.name}") outputTopicName: String,
     streamsBuilder: StreamsBuilderFactoryBean
 ) : BehaviorSpec({
 
@@ -45,13 +45,13 @@ class FraudDetectionTopologyTestDriverTest(
             inputTopic = testDriver.createInputTopic(
                 inputTopicName,
                 Serdes.String().serializer(),
-                JsonSerde(Transaction::class.java).serializer()
+                JacksonJsonSerde(Transaction::class.java).serializer()
             )
 
             outputTopic = testDriver.createOutputTopic(
                 outputTopicName,
                 Serdes.String().deserializer(),
-                JsonSerde(FraudAlert::class.java).deserializer()
+                JacksonJsonSerde(FraudAlert::class.java).deserializer()
             )
         }
 
