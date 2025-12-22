@@ -13,7 +13,7 @@ jackson-module-kotlin-version = "3.0.3"
 # Logging
 slf4j-version = "2.0.17"
 logstash-logback-encoder-version = "9.0"
-logback-classic-version = "1.5.22"
+logback-classic-version = "1.5.23"
 
 [libraries]
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson-module-kotlin-version" }
