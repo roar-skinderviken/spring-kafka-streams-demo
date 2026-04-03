@@ -8,7 +8,7 @@ kotlin-version = "2.3.20"
 mockk-version = "1.14.9"
 kotest-version = "6.1.10"
 springmockk-version = "5.0.1"
-jackson-module-kotlin-version = "3.1.0"
+jackson-module-kotlin-version = "3.1.1"
 
 # Logging
 slf4j-version = "2.0.17"
