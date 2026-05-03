@@ -6,7 +6,7 @@ kotlin-version = "2.3.20"
 
 # test
 mockk-version = "1.14.9"
-kotest-version = "6.1.10"
+kotest-version = "6.1.11"
 springmockk-version = "5.0.1"
 jackson-module-kotlin-version = "3.1.0"
 
